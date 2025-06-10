@@ -1,0 +1,40 @@
+.start-script {
+    float: left;
+    position: relative;
+    color: var(--color-surprise);
+    padding: 7px 21px 8px 14px;
+    background-color: var(--hl-xs);
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    width: 200px;
+    height: 40px;
+    text-align: center;
+    white-space: nowrap;
+  
+    &:hover {
+      color: var(--color-font);
+  
+      .method {
+        opacity: 1;
+      }
+    }
+  
+    &.active {
+      border: 1px solid var(--hl-md);
+      border-bottom: none;
+    }
+  
+    &.hidden {
+      visibility: visible;
+      pointer-events: none;
+      opacity: 0.4;
+      border: none;
+      display: block !important;
+  
+      .title {
+        opacity: 0;
+      }
+    }
+  }

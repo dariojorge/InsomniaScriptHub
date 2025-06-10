@@ -1,0 +1,32 @@
+.dropdown select {
+    float: left;
+    position: relative;
+    color: var(--color-surprise);
+    padding: 7px 21px 8px 14px;
+    background-color: var(--hl-xs);
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-bottom: none;
+    width: 200px;
+    height: 40px;
+    text-align: center;
+    white-space: nowrap;
+    
+    &::-ms-expand {
+        display: none;
+    }
+    
+    &:hover {
+      color: var(--color-font);
+  
+      .method {
+        opacity: 1;
+      }
+    }
+    
+    &:focus {
+        border-color: var(--color-surprise);
+    }
+  }
+  

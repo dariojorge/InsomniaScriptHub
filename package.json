@@ -1,0 +1,59 @@
+{
+  "name": "insomnia-script-hub",
+  "private": true,
+  "version": "0.0.240",
+  "main": "dist/index.js",
+  "insomnia": {
+    "name": "script-hub",
+    "displayName": "Script Hub",
+    "unlisted": true,
+    "publisher": {
+      "name": "Dário Jorge",
+      "icon": ""
+    }
+  },
+  "scripts": {
+    "build-npm": "node npm/generate-package.js --patch && node npm/copyFiles.js --source=./npm/content/* --destination=./dist/ --depth=2 && npm run install-dev",
+    "build": "esr esbuild.ts && npm run build-npm",
+    "watch-trigger": "esr esbuild.ts && npm run install",
+    "watch": "npm run build-npm && npm-watch watch-trigger",
+    "clean": "rimraf dist",
+    "install-dev": "node npm/copyFiles.js --source=./dist/* --destination=%appdata%\\insomnia\\plugins\\insomnia-script-hub --depth=1",
+    "lint": "eslint --ext .ts,.tsx .",
+    "lint-fix": "eslint --ext .ts,.tsx --fix ."
+  },
+  "watch": {
+    "watch-trigger": {
+      "patterns": [
+        "src"
+      ],
+      "extensions": "ts,tsx,scss"
+    }
+  },
+  "dependencies": {
+    "prop-types": "^15.5.7",
+    "react-json-tree": "^0.19.0",
+    "react-json-view-lite": "^1.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@seald-io/nedb": "^4.0.4",
+    "@types/node": "^20.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "copyfiles": "^2.4.1",
+    "esbuild": "^0.19.4",
+    "esbuild-runner": "^2.2.2",
+    "esbuild-sass-plugin": "^2.16.1",
+    "eslint": "^8.44.0",
+    "eslint-plugin-react": "^7.32.2",
+    "npm-watch": "^0.11.0",
+    "request": "^2.88.0",
+    "rimraf": "^5.0.1",
+    "sass": "^1.63.6",
+    "semver": "^7.3.8",
+    "react-resizable-panels": "^2.0.20"
+  }
+}

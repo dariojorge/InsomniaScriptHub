@@ -1,0 +1,6 @@
+export enum TabEnumType {
+    NORMAL = "NORMAL",
+    PERSONALIZED = "PERSONALIZED",
+    SETTINGS = "SETTINGS",
+    SCRIPT_HUB = "SCRIPT_HUB"
+}
