@@ -1,0 +1,3 @@
+interface SettingsModel {
+    scriptHubPath: string;
+}

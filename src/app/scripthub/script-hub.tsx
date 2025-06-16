@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Dropdown } from "../utils/dropdown/dropdown";
-import { firstElement, getElementByType, readFileDataList } from "../utils/Utils";
+import { firstElement, getElementByType, getSettings, readFileDataList } from "../utils/Utils";
+import CardComponent from "./card-component";
 const os = require('os');
 const homeDir = os.homedir();
 
 const settingsFilename: string = 'settings.json';
-const scriptHubBasePathName: string = `${homeDir}/Documents/Confi/ScriptsHub/`;
+const scriptHubPath = getSettings(settingsFilename).scriptHubPath;
 let scriptTypePathName = "";
 let scriptTypeData: DataList;
 let operationsData: DataList;
@@ -18,34 +19,15 @@ const ScriptHub = (props: {}) => {
     const [cmdList, setCmdList] = useState([]);
 
     useEffect(() => {
-        scriptTypeData = readFileDataList(scriptHubBasePathName, settingsFilename);
+        /*scriptTypeData = readFileDataList(scriptHubPath, settingsFilename);
         const scriptTypeInit = firstElement(scriptTypeData.types).name;
         setScriptType(scriptTypeInit);
-        setOperationData(scriptTypeInit);
+        setOperationData(scriptTypeInit);*/
     }, [])
 
 
     const handleOnClick = async () => {
         console.log(scriptType);
-
-        /* const options: ExecSyncOptionsWithStringEncoding = {
-             shell: "C:\\Program Files\\Git\\bin\\bash.exe",
-             encoding: "utf8"
-         };*/
-
-        //const executeCmd = "scriptHub.sh scriptType=runners type=update projects=sf-display-service env=local";
-        //const path = "cd ~ && cd Documents/Confi/ScriptsHub"
-
-        //execSync(`cd ~ && cd ${scriptHubPathName} && ./scriptHub.sh scriptType=runners type=update projects=sf-display-service env=local`, options);
-
-        /*exec(`${path} && ${executeCmd}`, options, (err: any, stdout: any, stderr: any) => {
-            if (err) {
-                console.error(err);
-            } else {
-                console.log(`The stdout Buffer from shell: ${stdout.toString()}`);
-                console.log(`The stderr Buffer from shell: ${stderr.toString()}`);
-            }
-        });*/
     };
 
 
@@ -66,10 +48,10 @@ const ScriptHub = (props: {}) => {
 
     const setOperationData = (scriptTypeInit: string) => {
         const scriptTypeDataType = getElementByType(scriptTypeData.types, scriptTypeInit);
-        const scriptTypePath = `${scriptHubBasePathName}scripts${scriptTypeDataType.basePath}`;
+        const scriptTypePath = `${scriptHubPath}/scripts${scriptTypeDataType.basePath}`;
         operationsData = readFileDataList(scriptTypePath, settingsFilename);
         scriptTypePathName = scriptTypePath;
-        
+
         const operationDataType = getElementByType(operationsData.types, firstElement(operationsData.types).type);
         const operationPath = `${scriptTypePath}${operationDataType.basePath}`;
         const settingsData = readFileDataList(operationPath, settingsFilename);
@@ -87,6 +69,7 @@ const ScriptHub = (props: {}) => {
             {operationsData !== undefined &&
                 <Dropdown dataValue={operation} dataList={operationsData} isDisabled={false} updateSelected={updateOperation}></Dropdown>
             }
+            <CardComponent />
         </>
     );
 }

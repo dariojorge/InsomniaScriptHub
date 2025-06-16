@@ -1,7 +1,7 @@
 {
   "name": "insomnia-script-hub",
   "private": true,
-  "version": "0.0.240",
+  "version": "0.0.476",
   "main": "dist/index.js",
   "insomnia": {
     "name": "script-hub",
@@ -31,11 +31,14 @@
     }
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.1",
     "prop-types": "^15.5.7",
-    "react-json-tree": "^0.19.0",
-    "react-json-view-lite": "^1.4.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-json-tree": "^0.19.0",
+    "react-json-view-lite": "^1.4.0"
   },
   "devDependencies": {
     "@seald-io/nedb": "^4.0.4",
@@ -50,10 +53,10 @@
     "eslint": "^8.44.0",
     "eslint-plugin-react": "^7.32.2",
     "npm-watch": "^0.11.0",
+    "react-resizable-panels": "^2.0.20",
     "request": "^2.88.0",
     "rimraf": "^5.0.1",
     "sass": "^1.63.6",
-    "semver": "^7.3.8",
-    "react-resizable-panels": "^2.0.20"
+    "semver": "^7.3.8"
   }
 }

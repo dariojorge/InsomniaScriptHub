@@ -1,11 +1,12 @@
-import React from "react";
+import React from 'react';
 import { createRoot } from "react-dom/client";
+import './settings.styles.scss';
+import { SettingsForm } from './settings-form';
 
 const Settings = (props: {}) => {
-    console.log("Settings");
     return (
         <>
-            
+            <SettingsForm />
         </>
     );
 }

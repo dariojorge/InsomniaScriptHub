@@ -1,5 +1,6 @@
 interface DataList {
     types: Data[];
+    type: string;
 }
 
 interface Data {
