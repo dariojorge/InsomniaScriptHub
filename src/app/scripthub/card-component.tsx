@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { checkForLastSlashInString, firstElement, getElementByType, getFolders, getLastElement, getSettings, isEmpty, isListEmpty, readFileDataList, removeAllElems } from '../utils/Utils';
+import { checkForLastSlashInString, firstElement, getElementByType, getFolders, getLastElement, getSettings, isEmpty, isListEmpty, readFileDataList, readFileEnvs, removeAllElems } from '../utils/Utils';
 
 const emptyCardData: CardData = { id: -1, title: '', selectedOption: '', options: [], filePath: '' };
 const emptyListCardData: CardData[] = [emptyCardData];
@@ -48,7 +48,6 @@ const CardComponent = () => {
   }, [cards]);
 
   const buildCardOfEnvType = (cmdList: any, lastElemSelectedOption: string): CardData => {
-    //console.log(lastElemSelectedOption);
     if (cmdListCount + 1 > cmdList.length) {
       return emptyCardData;
     }
@@ -65,12 +64,9 @@ const CardComponent = () => {
   };
 
   const buildCardWithBasePath = (lastElem: CardData, firstOptionElem: any): CardData => {
-    console.log("lastElem");
-    console.log(lastElem);
     if (lastElem.selectedOption) {
       firstOptionElem = getElementByType(lastElem.options, lastElem.selectedOption);
     }
-    console.log(firstOptionElem);
 
     const id = cards.length;
     const basePath = firstOptionElem.basePath.replaceAll(".", "");
@@ -90,19 +86,17 @@ const CardComponent = () => {
     if(title==="operation") {
       selectedOption = lastElem.selectedOption;
 
-      console.log("******operation*******");
-      console.log(settings);
-      console.log(options);
-      console.log(selectedOption);
-      const rawOptions = firstElement(options.filter(type => type.name === selectedOption)).types;
+      const rawOptions = firstElement(options.filter(option => option.types?.includes(selectedOption)));
+      const types = rawOptions.types;
+      const cmdList = rawOptions.cmdList;
       options = [];
-      rawOptions?.forEach((type: string) => {
+      types?.forEach((type: string) => {
         options.push({
           type: type,
-          name: type
+          name: type,
+          cmdList: cmdList
         });
       });
-      console.log(options);
     }
 
     return { id: id, title: title, selectedOption: selectedOption, options: options, filePath: filePath };
@@ -147,13 +141,17 @@ const CardComponent = () => {
       case "projectList":
         return listOfAllProjects();
       case "envs":
-        return listOfAllProjects();
+        return listOfAllEnvironments();
       case "additionalCmd":
-        return listOfAllProjects();
+        return listOfAllAdditionalCmd();
       default:
         return [{ type: "a", name: "b" }];
     }
 
+  }
+
+  const getSelectedProject = () => {
+    return firstElement(cards.filter(cardData => cardData.title === "projects")).selectedOption;
   }
 
   const listOfAllProjects = (): Data[] => {
@@ -168,9 +166,35 @@ const CardComponent = () => {
     return folders;
   }
 
+  const listOfAllEnvironments = (): Data[] => {
+    const selectedProject = getSelectedProject();
+    const settings = readFileEnvs(`${scriptHubPath}/projects/${selectedProject}`);
+    const envList: Data[] = [];
+    settings.envs?.forEach(env => {
+      envList.push({
+        type: env.type,
+        name: env.type
+      });
+    });
+    return envList;
+  }
+
+  const listOfAllAdditionalCmd = (): Data[] => {
+    const selectedProject = getSelectedProject();
+    const settings = readFileEnvs(`${scriptHubPath}/projects/${selectedProject}`);
+    const envList: Data[] = [];
+    settings.additionalCmd?.forEach(env => {
+      envList.push({
+        type: env.key,
+        name: env.key
+      });
+    });
+    return envList;
+  }
+
   return (
     <div style={{ display: 'flex', gap: '1rem' }}>
-      {cards.filter(card => card.title !== "operations").map(card => (
+      {cards.filter(card => card.title !== "operation").map(card => (
         <div
           key={card.id}
           style={{

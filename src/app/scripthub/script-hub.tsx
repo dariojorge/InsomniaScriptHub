@@ -1,75 +1,100 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Dropdown } from "../utils/dropdown/dropdown";
-import { firstElement, getElementByType, getSettings, readFileDataList } from "../utils/Utils";
-import CardComponent from "./card-component";
-const os = require('os');
-const homeDir = os.homedir();
+import { firstElement, getLastElement, getSettings, isBlank, isEmpty, isListEmpty } from "../utils/Utils";
+import ScriptComponent from "./script-component";
+import OperationComponent from "./operation-component";
+import AdditionalCmdComponent from "./additional-cmd-component";
 
 const settingsFilename: string = 'settings.json';
 const scriptHubPath = getSettings(settingsFilename).scriptHubPath;
-let scriptTypePathName = "";
-let scriptTypeData: DataList;
-let operationsData: DataList;
+const emptyCardData: CardData = { id: -1, title: '', selectedOption: '', options: [], filePath: '' };
+const emptyListCardData: CardData[] = [emptyCardData];
 
 
 const ScriptHub = (props: {}) => {
-    const [scriptType, setScriptType] = useState("");
-    const [operation, setOperation] = useState("");
-    const [cmdList, setCmdList] = useState([]);
+    const [scriptData, setScriptData] = useState<CardData[]>(emptyListCardData);
+    const [operation, setOperation] = useState<CardData>(emptyCardData);
+    const [operationData, setOperationData] = useState<CardData[]>(emptyListCardData);
+    const [additionalCmdData, setAdditionalCmdData] = useState<CardData[]>(emptyListCardData);
+    const [selectedProject, setSelectedProject] = useState<string>("");
+
+    const [argumentData, setArgumentData] = useState<ArgumentModel[]>([]);
 
     useEffect(() => {
-        /*scriptTypeData = readFileDataList(scriptHubPath, settingsFilename);
-        const scriptTypeInit = firstElement(scriptTypeData.types).name;
-        setScriptType(scriptTypeInit);
-        setOperationData(scriptTypeInit);*/
-    }, [])
+        //console.log("Argument Data:");
+        //console.log(argumentData);
+    }, [argumentData]);
+
+    useEffect(() => {
+        console.log("Script Data:");
+        console.log(scriptData);
+
+        buildArgumentData(scriptData.filter(script => script.title !== "operation"));
+        buildOperation();
+    }, [scriptData]);
+
+    const buildOperation = () => {
+        const opetationResult = firstElement(scriptData.filter(script => script.title === "operation"));
+        if (opetationResult === null || opetationResult.id === -1) {
+            return;
+        }
+        setOperation(opetationResult);
+    }
+
+    useEffect(() => {
+        console.log("Operation Data:");
+        console.log(operationData);
+        buildArgumentData(operationData.filter(card => card.id !== 0));
+        buildAdditionalCmdData();
+        buildSelectedProject();
+    }, [operationData]);
+
+    const buildAdditionalCmdData = () => {
+        const additionalCmd = operationData.filter(card => card.id !== 0);
+        setAdditionalCmdData(additionalCmd);
+    }
+
+    const buildSelectedProject = () => {
+        const projects = firstElement(operationData.filter(data => data.title === "projects"));
+        if (projects !== null && !isEmpty(projects.selectedOption)) {
+            setSelectedProject(projects.selectedOption);
+        }
+    }
 
 
     const handleOnClick = async () => {
-        console.log(scriptType);
+        //console.log(scriptType);
     };
 
-
-    const updateScriptType = (event: { target: any; }) => {
-        setScriptType(event.target.value);
-        setOperationData(event.target.value);
-    }
-
-    const updateOperation = (event: { target: any; }) => {
-        setOperation(event.target.value);
-
-        const operationDataType = getElementByType(operationsData.types, event.target.value);
-        const operationPath = `${scriptTypePathName}${operationDataType.basePath}`;
-        const settingsData = readFileDataList(operationPath, settingsFilename);
-        console.log(settingsData.types);
-        console.log(getElementByType(settingsData.types, event.target.value));
-    }
-
-    const setOperationData = (scriptTypeInit: string) => {
-        const scriptTypeDataType = getElementByType(scriptTypeData.types, scriptTypeInit);
-        const scriptTypePath = `${scriptHubPath}/scripts${scriptTypeDataType.basePath}`;
-        operationsData = readFileDataList(scriptTypePath, settingsFilename);
-        scriptTypePathName = scriptTypePath;
-
-        const operationDataType = getElementByType(operationsData.types, firstElement(operationsData.types).type);
-        const operationPath = `${scriptTypePath}${operationDataType.basePath}`;
-        const settingsData = readFileDataList(operationPath, settingsFilename);
-        console.log(getElementByType(settingsData.types, firstElement(operationsData.types).type));
+    const buildArgumentData = (cardData: CardData[]) => {
+        const newData: ArgumentModel[] = cardData.map(data => ({ title: data.title, value: data.selectedOption }));
+        const mergedUnique = Array.from(
+            new Map([...argumentData.filter(argument => !isBlank(argument.title)), ...newData].map(item => [item.title, item])).values()
+        );
+        setArgumentData(mergedUnique);
     }
 
     return (
         <>
-            <button className="start-script" id="start-script-btn" onClick={handleOnClick}>
-                Start Script Hub
-            </button>
-            {scriptTypeData !== undefined &&
-                <Dropdown dataValue={scriptType} dataList={scriptTypeData} isDisabled={false} updateSelected={updateScriptType}></Dropdown>
+            <div>
+                <button className="start-script" id="start-script-btn" onClick={handleOnClick}>
+                    Start Script Hub
+                </button>
+            </div>
+            <div>
+                <ScriptComponent scriptData={scriptData} updateData={setScriptData} />
+            </div>
+            {operation.id !== -1 &&
+                <div>
+                    <OperationComponent operation={operation} operationData={operationData} updateData={setOperationData} />
+                </div>
             }
-            {operationsData !== undefined &&
-                <Dropdown dataValue={operation} dataList={operationsData} isDisabled={false} updateSelected={updateOperation}></Dropdown>
+            {!isListEmpty(additionalCmdData) && firstElement(additionalCmdData).id !== -1 &&
+                <div>
+                    <AdditionalCmdComponent additionalCmd={operation} selectedProject={selectedProject} updateData={setAdditionalCmdData} />
+                </div>
             }
-            <CardComponent />
+
         </>
     );
 }

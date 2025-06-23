@@ -6,4 +6,6 @@ interface DataList {
 interface Data {
     type: string;
     name: string;
+    cmdList?: any[];
+    types?: string[];
 }

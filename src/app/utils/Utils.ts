@@ -7,6 +7,11 @@ const homeDir = os.homedir();
 const options: ExecSyncOptionsWithStringEncoding = {
     encoding: "utf8"
 };
+const ENVS_FILE_NAME = "envs.json";
+
+export const log = (message: string) => console.log(message);
+export const warning = (message: string) => console.warn(message);
+export const error = (message: string) => console.error(message);
 
 const openFile = (filePath: string) => fs.readFileSync(filePath.replaceAll("\/", path.sep), options);
 const getTypesOrType = (element: any, elementName: string) => {
@@ -40,6 +45,16 @@ export const readFileDataList = (pathName: string, fileName: string): DataList =
 
     if (!fs.existsSync(settingsPath)) {
         return JSON.parse('{ "types": [] }');
+    }
+    return JSON.parse(openFile(settingsPath));
+}
+
+export const readFileEnvs = (pathName: string): EnvsData => {
+    let settingsPath = `${pathName}/${ENVS_FILE_NAME}`.replaceAll("\\", "/").replaceAll("//", "/");
+
+    if (!fs.existsSync(settingsPath)) {
+        error(`The file envs.json does not exist. Returning empty json. Path: ${settingsPath}`);
+        return JSON.parse('{}');
     }
     return JSON.parse(openFile(settingsPath));
 }
