@@ -7,7 +7,7 @@ const emptyListCardData: CardData[] = [emptyCardData];
 const settingsFilename: string = 'settings.json';
 const scriptHubPath = getSettings(settingsFilename).scriptHubPath;
 
-const AdditionalCmdComponent = (props: { additionalCmd: CardData; selectedProject: string; updateData: any; }) => {
+const AdditionalCmdComponent = (props: { operation: CardData; selectedProject: string; updateData: any; }) => {
   const [cards, setCards] = useState<CardData[]>(emptyListCardData);
   const isFirstRender = useRef(true);
 
@@ -26,13 +26,13 @@ const AdditionalCmdComponent = (props: { additionalCmd: CardData; selectedProjec
     }
 
     let newElem: CardData;
-    if (isListEmpty(props.additionalCmd.options) || cards.filter(card => card.title === "additionalCmd").length === 1) {
+    if (isListEmpty(props.operation.options) || cards.filter(card => card.title === "additionalCmd").length === 1) {
       return;
     }
 
-    const operationOptionElem = firstElement(props.additionalCmd.options);
+    const operationOptionElem = firstElement(props.operation.options);
     if (!isListEmpty(operationOptionElem.cmdList)) {
-      newElem = buildCardOfEnvType(operationOptionElem.cmdList, props.additionalCmd.selectedOption);
+      newElem = buildCardOfEnvType(operationOptionElem.cmdList);
     } else {
       newElem = emptyCardData;
     }
@@ -47,7 +47,7 @@ const AdditionalCmdComponent = (props: { additionalCmd: CardData; selectedProjec
     ]);
   }, [cards, props.selectedProject]);
 
-  const buildCardOfEnvType = (cmdList: any, lastElemSelectedOption: string): CardData => {
+  const buildCardOfEnvType = (cmdList: any): CardData => {
     const cmd: { name: any; type: any; } = firstElement(cmdList.filter((cmd: { name: any; type: any; }) => cmd.name === "additionalCmd"));
     const id = cards.length;
     const title = cmd.name;
@@ -55,12 +55,15 @@ const AdditionalCmdComponent = (props: { additionalCmd: CardData; selectedProjec
     const options: Data[] = listOfAllAdditionalCmd();
     const filePath = "";
 
+    if(isListEmpty(options)) {
+      return emptyCardData;
+    }
+
     return { id: id, title: title, selectedOption: selectedOption, options: options, filePath: filePath };
   };
 
-  const handleSelectChange = (value: any) => {
-    console.log("Additional cmd from checkbox: ");
-    console.log(value);
+  const handleSelectChange = (data: any) => {
+    props.updateData({ id: 0, title: data.name, selectedOption: data.value, options: [], filePath: "" });
   };
 
   const listOfAllAdditionalCmd = (): Data[] => {

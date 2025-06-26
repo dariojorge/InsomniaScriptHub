@@ -1,7 +1,7 @@
 {
   "name": "insomnia-script-hub",
   "private": true,
-  "version": "0.0.668",
+  "version": "0.0.698",
   "main": "dist/index.js",
   "insomnia": {
     "name": "script-hub",

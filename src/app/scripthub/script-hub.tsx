@@ -16,13 +16,14 @@ const ScriptHub = (props: {}) => {
     const [operation, setOperation] = useState<CardData>(emptyCardData);
     const [operationData, setOperationData] = useState<CardData[]>(emptyListCardData);
     const [additionalCmdData, setAdditionalCmdData] = useState<CardData[]>(emptyListCardData);
+    const [additionalCmd, setAdditionalCmd] = useState<CardData>(emptyCardData);
     const [selectedProject, setSelectedProject] = useState<string>("");
 
     const [argumentData, setArgumentData] = useState<ArgumentModel[]>([]);
 
     useEffect(() => {
-        //console.log("Argument Data:");
-        //console.log(argumentData);
+        console.log("Argument Data:");
+        console.log(argumentData);
     }, [argumentData]);
 
     useEffect(() => {
@@ -44,7 +45,8 @@ const ScriptHub = (props: {}) => {
     useEffect(() => {
         console.log("Operation Data:");
         console.log(operationData);
-        buildArgumentData(operationData.filter(card => card.id !== 0));
+
+        buildArgumentData(operationData.filter(card => card.id !== -1));
         buildAdditionalCmdData();
         buildSelectedProject();
     }, [operationData]);
@@ -61,6 +63,18 @@ const ScriptHub = (props: {}) => {
         }
     }
 
+    useEffect(() => {
+        console.log("Additional Cmd Data:");
+        console.log(additionalCmd);
+
+        const cardDataList: CardData[] = [{ id: 0, title: additionalCmd.title, selectedOption: additionalCmd.selectedOption, options: [], filePath: '' }];
+        buildArgumentData(cardDataList);
+        /*const newData: ArgumentModel[] = [additionalCmdData].map(data => ({ title: data.name, value: data.value }));
+        const mergedUnique = Array.from(
+            new Map([...argumentData.filter(argument => !isBlank(argument.title)), ...newData].map(item => [item.title, item])).values()
+        );
+        setArgumentData(mergedUnique);*/
+    }, [additionalCmd]);
 
     const handleOnClick = async () => {
         //console.log(scriptType);
@@ -89,9 +103,9 @@ const ScriptHub = (props: {}) => {
                     <OperationComponent operation={operation} operationData={operationData} updateData={setOperationData} />
                 </div>
             }
-            {!isListEmpty(additionalCmdData) && firstElement(additionalCmdData).id !== -1 &&
+            {!isBlank(selectedProject) &&
                 <div>
-                    <AdditionalCmdComponent additionalCmd={operation} selectedProject={selectedProject} updateData={setAdditionalCmdData} />
+                    <AdditionalCmdComponent operation={operation} selectedProject={selectedProject} updateData={setAdditionalCmd} />
                 </div>
             }
 
