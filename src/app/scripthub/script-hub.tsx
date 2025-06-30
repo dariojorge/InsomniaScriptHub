@@ -4,18 +4,24 @@ import { firstElement, getLastElement, getSettings, isBlank, isEmpty, isListEmpt
 import ScriptComponent from "./script-component";
 import OperationComponent from "./operation-component";
 import AdditionalCmdComponent from "./additional-cmd-component";
+import fs from 'fs';
+import path from "path";
+import { execSync } from "child_process";
+import { ExecSyncOptionsWithStringEncoding } from "child_process";
+const options: ExecSyncOptionsWithStringEncoding = {
+    encoding: "utf8",
+    cwd: "/"
+};
 
 const settingsFilename: string = 'settings.json';
 const scriptHubPath = getSettings(settingsFilename).scriptHubPath;
 const emptyCardData: CardData = { id: -1, title: '', selectedOption: '', options: [], filePath: '' };
 const emptyListCardData: CardData[] = [emptyCardData];
 
-
 const ScriptHub = (props: {}) => {
     const [scriptData, setScriptData] = useState<CardData[]>(emptyListCardData);
     const [operation, setOperation] = useState<CardData>(emptyCardData);
     const [operationData, setOperationData] = useState<CardData[]>(emptyListCardData);
-    const [additionalCmdData, setAdditionalCmdData] = useState<CardData[]>(emptyListCardData);
     const [additionalCmd, setAdditionalCmd] = useState<CardData>(emptyCardData);
     const [selectedProject, setSelectedProject] = useState<string>("");
 
@@ -47,14 +53,8 @@ const ScriptHub = (props: {}) => {
         console.log(operationData);
 
         buildArgumentData(operationData.filter(card => card.id !== -1));
-        buildAdditionalCmdData();
         buildSelectedProject();
     }, [operationData]);
-
-    const buildAdditionalCmdData = () => {
-        const additionalCmd = operationData.filter(card => card.id !== 0);
-        setAdditionalCmdData(additionalCmd);
-    }
 
     const buildSelectedProject = () => {
         const projects = firstElement(operationData.filter(data => data.title === "projects"));
@@ -69,16 +69,25 @@ const ScriptHub = (props: {}) => {
 
         const cardDataList: CardData[] = [{ id: 0, title: additionalCmd.title, selectedOption: additionalCmd.selectedOption, options: [], filePath: '' }];
         buildArgumentData(cardDataList);
-        /*const newData: ArgumentModel[] = [additionalCmdData].map(data => ({ title: data.name, value: data.value }));
-        const mergedUnique = Array.from(
-            new Map([...argumentData.filter(argument => !isBlank(argument.title)), ...newData].map(item => [item.title, item])).values()
-        );
-        setArgumentData(mergedUnique);*/
     }, [additionalCmd]);
 
     const handleOnClick = async () => {
-        //console.log(scriptType);
+        const fileName = "scriptHub.sh";
+        const pathName = path.resolve(`${scriptHubPath}`).replaceAll("\\", "/").replaceAll("//", "/");
+        options.cwd = pathName;
+        options.shell = getTerminal();
+        console.log(options);
+        console.log(`sh ./${fileName} ${joinAllArguments()}`);
+        console.log(execSync(`sh ./${fileName} ${joinAllArguments()}`, options));
     };
+
+    const joinAllArguments = () => {
+        let allArgsInfoText = "";
+        argumentData.forEach(data => {
+            allArgsInfoText += `${data.title}=${data.value} `;
+        });
+        return allArgsInfoText;
+    }
 
     const buildArgumentData = (cardData: CardData[]) => {
         const newData: ArgumentModel[] = cardData.map(data => ({ title: data.title, value: data.selectedOption }));
@@ -86,6 +95,14 @@ const ScriptHub = (props: {}) => {
             new Map([...argumentData.filter(argument => !isBlank(argument.title)), ...newData].map(item => [item.title, item])).values()
         );
         setArgumentData(mergedUnique);
+    }
+
+    const getTerminal = (): string => {
+        if (process.platform === 'win32') {
+            return "C:\\Program Files\\Git\\bin\\bash.exe";
+        }
+
+        return process.env.SHELL || '/bin/bash';;
     }
 
     return (

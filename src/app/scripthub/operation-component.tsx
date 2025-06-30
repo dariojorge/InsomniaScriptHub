@@ -14,6 +14,10 @@ const OperationComponent = (props: { operation: CardData; operationData: CardDat
   }, [])
 
   useEffect(() => {
+    props.updateData([]);
+  }, [props.operation])
+
+  useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -28,6 +32,9 @@ const OperationComponent = (props: { operation: CardData; operationData: CardDat
       return;
     }
 
+    console.log("operationOptionElem");
+    console.log(operationOptionElem);
+
     const newElem = buildCardOfEnvType(operationOptionElem.cmdList);
     if (newElem.id === -1) {
       return;
@@ -41,19 +48,12 @@ const OperationComponent = (props: { operation: CardData; operationData: CardDat
 
   const buildCardOfEnvType = (cmdList: any): CardData => {
     const count = isListEmpty(getLastElement(props.operationData)) ? 0 : getLastElement(props.operationData).id + 1;
-    if(count > cmdList.length) {
+    if (count > cmdList.length) {
       return emptyCardData;
     }
 
     const cmd: { name: any; type: any; } = cmdList[count];
-    console.log("count: ");
-    console.log(count);
-    console.log(cmdList.length);
-    console.log(cmd);
-    console.log(cmdList);
-    console.log(props.operationData);
-    console.log("******************");
-    if (cmd === undefined || cmd.name === "additionalCmd") {
+    if (cmd === undefined || cmd.type === "additionalCmd" || cmd.type === "boolean") {
       return emptyCardData;
     }
     const id = props.operationData.length;
@@ -94,8 +94,10 @@ const OperationComponent = (props: { operation: CardData; operationData: CardDat
         return listOfAllProjects();
       case "envs":
         return listOfAllEnvironments();
+      case "boolean":
+        return listOfAllEnvironments();
       default:
-        return [{ type: "a", name: "b" }];
+        return [];
     }
 
   }
