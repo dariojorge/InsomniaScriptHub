@@ -1,92 +1,131 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { Dropdown } from "../utils/dropdown/dropdown";
-import { firstElement, getElementByType, readFileDataList } from "../utils/Utils";
-const os = require('os');
-const homeDir = os.homedir();
+import { firstElement, getLastElement, getSettings, isBlank, isEmpty, isListEmpty } from "../utils/Utils";
+import ScriptComponent from "./script-component";
+import OperationComponent from "./operation-component";
+import AdditionalCmdComponent from "./additional-cmd-component";
+import fs from 'fs';
+import path from "path";
+import { execSync } from "child_process";
+import { ExecSyncOptionsWithStringEncoding } from "child_process";
+const options: ExecSyncOptionsWithStringEncoding = {
+    encoding: "utf8",
+    cwd: "/"
+};
 
 const settingsFilename: string = 'settings.json';
-const scriptHubBasePathName: string = `${homeDir}/Documents/Confi/ScriptsHub/`;
-let scriptTypePathName = "";
-let scriptTypeData: DataList;
-let operationsData: DataList;
-
+const scriptHubPath = getSettings(settingsFilename).scriptHubPath;
+const emptyCardData: CardData = { id: -1, title: '', selectedOption: '', options: [], filePath: '' };
+const emptyListCardData: CardData[] = [emptyCardData];
 
 const ScriptHub = (props: {}) => {
-    const [scriptType, setScriptType] = useState("");
-    const [operation, setOperation] = useState("");
-    const [cmdList, setCmdList] = useState([]);
+    const [scriptData, setScriptData] = useState<CardData[]>(emptyListCardData);
+    const [operation, setOperation] = useState<CardData>(emptyCardData);
+    const [operationData, setOperationData] = useState<CardData[]>(emptyListCardData);
+    const [additionalCmd, setAdditionalCmd] = useState<CardData>(emptyCardData);
+    const [selectedProject, setSelectedProject] = useState<string>("");
+
+    const [argumentData, setArgumentData] = useState<ArgumentModel[]>([]);
 
     useEffect(() => {
-        scriptTypeData = readFileDataList(scriptHubBasePathName, settingsFilename);
-        const scriptTypeInit = firstElement(scriptTypeData.types).name;
-        setScriptType(scriptTypeInit);
-        setOperationData(scriptTypeInit);
-    }, [])
+        console.log("Argument Data:");
+        console.log(argumentData);
+    }, [argumentData]);
 
+    useEffect(() => {
+        console.log("Script Data:");
+        console.log(scriptData);
+
+        buildArgumentData(scriptData.filter(script => script.title !== "operation"));
+        buildOperation();
+    }, [scriptData]);
+
+    const buildOperation = () => {
+        const opetationResult = firstElement(scriptData.filter(script => script.title === "operation"));
+        if (opetationResult === null || opetationResult.id === -1) {
+            return;
+        }
+        setOperation(opetationResult);
+    }
+
+    useEffect(() => {
+        console.log("Operation Data:");
+        console.log(operationData);
+
+        buildArgumentData(operationData.filter(card => card.id !== -1));
+        buildSelectedProject();
+    }, [operationData]);
+
+    const buildSelectedProject = () => {
+        const projects = firstElement(operationData.filter(data => data.title === "projects"));
+        if (projects !== null && !isEmpty(projects.selectedOption)) {
+            setSelectedProject(projects.selectedOption);
+        }
+    }
+
+    useEffect(() => {
+        console.log("Additional Cmd Data:");
+        console.log(additionalCmd);
+
+        const cardDataList: CardData[] = [{ id: 0, title: additionalCmd.title, selectedOption: additionalCmd.selectedOption, options: [], filePath: '' }];
+        buildArgumentData(cardDataList);
+    }, [additionalCmd]);
 
     const handleOnClick = async () => {
-        console.log(scriptType);
-
-        /* const options: ExecSyncOptionsWithStringEncoding = {
-             shell: "C:\\Program Files\\Git\\bin\\bash.exe",
-             encoding: "utf8"
-         };*/
-
-        //const executeCmd = "scriptHub.sh scriptType=runners type=update projects=sf-display-service env=local";
-        //const path = "cd ~ && cd Documents/Confi/ScriptsHub"
-
-        //execSync(`cd ~ && cd ${scriptHubPathName} && ./scriptHub.sh scriptType=runners type=update projects=sf-display-service env=local`, options);
-
-        /*exec(`${path} && ${executeCmd}`, options, (err: any, stdout: any, stderr: any) => {
-            if (err) {
-                console.error(err);
-            } else {
-                console.log(`The stdout Buffer from shell: ${stdout.toString()}`);
-                console.log(`The stderr Buffer from shell: ${stderr.toString()}`);
-            }
-        });*/
+        const fileName = "scriptHub.sh";
+        const pathName = path.resolve(`${scriptHubPath}`).replaceAll("\\", "/").replaceAll("//", "/");
+        options.cwd = pathName;
+        options.shell = getTerminal();
+        console.log(options);
+        console.log(`sh ./${fileName} ${joinAllArguments()}`);
+        console.log(execSync(`sh ./${fileName} ${joinAllArguments()}`, options));
     };
 
-
-    const updateScriptType = (event: { target: any; }) => {
-        setScriptType(event.target.value);
-        setOperationData(event.target.value);
+    const joinAllArguments = () => {
+        let allArgsInfoText = "";
+        argumentData.forEach(data => {
+            allArgsInfoText += `${data.title}=${data.value} `;
+        });
+        return allArgsInfoText;
     }
 
-    const updateOperation = (event: { target: any; }) => {
-        setOperation(event.target.value);
-
-        const operationDataType = getElementByType(operationsData.types, event.target.value);
-        const operationPath = `${scriptTypePathName}${operationDataType.basePath}`;
-        const settingsData = readFileDataList(operationPath, settingsFilename);
-        console.log(settingsData.types);
-        console.log(getElementByType(settingsData.types, event.target.value));
+    const buildArgumentData = (cardData: CardData[]) => {
+        const newData: ArgumentModel[] = cardData.map(data => ({ title: data.title, value: data.selectedOption }));
+        const mergedUnique = Array.from(
+            new Map([...argumentData.filter(argument => !isBlank(argument.title)), ...newData].map(item => [item.title, item])).values()
+        );
+        setArgumentData(mergedUnique);
     }
 
-    const setOperationData = (scriptTypeInit: string) => {
-        const scriptTypeDataType = getElementByType(scriptTypeData.types, scriptTypeInit);
-        const scriptTypePath = `${scriptHubBasePathName}scripts${scriptTypeDataType.basePath}`;
-        operationsData = readFileDataList(scriptTypePath, settingsFilename);
-        scriptTypePathName = scriptTypePath;
-        
-        const operationDataType = getElementByType(operationsData.types, firstElement(operationsData.types).type);
-        const operationPath = `${scriptTypePath}${operationDataType.basePath}`;
-        const settingsData = readFileDataList(operationPath, settingsFilename);
-        console.log(getElementByType(settingsData.types, firstElement(operationsData.types).type));
+    const getTerminal = (): string => {
+        if (process.platform === 'win32') {
+            return "C:\\Program Files\\Git\\bin\\bash.exe";
+        }
+
+        return process.env.SHELL || '/bin/bash';;
     }
 
     return (
         <>
-            <button className="start-script" id="start-script-btn" onClick={handleOnClick}>
-                Start Script Hub
-            </button>
-            {scriptTypeData !== undefined &&
-                <Dropdown dataValue={scriptType} dataList={scriptTypeData} isDisabled={false} updateSelected={updateScriptType}></Dropdown>
+            <div>
+                <button className="start-script" id="start-script-btn" onClick={handleOnClick}>
+                    Start Script Hub
+                </button>
+            </div>
+            <div>
+                <ScriptComponent scriptData={scriptData} updateData={setScriptData} />
+            </div>
+            {operation.id !== -1 &&
+                <div>
+                    <OperationComponent operation={operation} operationData={operationData} updateData={setOperationData} />
+                </div>
             }
-            {operationsData !== undefined &&
-                <Dropdown dataValue={operation} dataList={operationsData} isDisabled={false} updateSelected={updateOperation}></Dropdown>
+            {!isBlank(selectedProject) &&
+                <div>
+                    <AdditionalCmdComponent operation={operation} selectedProject={selectedProject} updateData={setAdditionalCmd} />
+                </div>
             }
+
         </>
     );
 }
